@@ -6,7 +6,7 @@ console.log('Cadena de conexión desde process.env:', process.env.CONNECTION_STR
 
 const dbConnection = async () => {
   try {
-    const connectionString = process.env.CONNECTION_STRING; // Acceder a la cadena de conexión correctamente
+    const connectionString = process.env.CONNECTION_STRING; 
     console.log(connectionString);
     if (!connectionString) {
       throw new Error("La cadena de conexión está indefinida");
