@@ -1,54 +1,60 @@
 const express = require("express");
-const cors = require("cors"); //Permite el intercambio de info de origen cruzado
-const { dbConnection } = require("../database/db.cjs")
-const productsRouter = require("../routes/routes.js")
-
+const cors = require("cors");
+const { dbConnection } = require("../database/db.js");
+const productRoutes = require("../routes/productRoutes.js");
+const cartRoutes = require("../routes/cartRoutes.js");
+const buyRoutes = require("../routes/buyRoutes.js");
+const parseJson = require('../middlewares/parseJson');
 
 class Server {
   constructor() {
+    this.app1 = express();
+    this.app2 = express();
+    this.port1 = process.env.PORT.split(',')[0] || 5050; // Obtener el primer puerto de la lista o usar 5050 como predeterminado
+    this.port2 = process.env.PORT.split(',')[1] || 8080; // Obtener el segundo puerto de la lista o usar 8080 como predeterminado
 
-    this.app = express();
-    this.port = process.env.PORT;
-    this.usuariosPath = "/api/usuarios";
-    this.mathPath = "/math";
-    this.authPath = "/api/auth";
-    this.productsPath = "/api/products"
-
-
-    //Middlewares
+    // Middlewares
     this.middlewares();
 
-    //Rutas de mi app
-
+    // Rutas de la aplicación
     this.routes();
-    //Conexión a DB
-    this.conectarDB();
 
+    // Conexión a la base de datos
+    this.conectarDB();
   }
 
   async conectarDB() {
     await dbConnection();
-
-
   }
 
   middlewares() {
-    this.app.use(cors());
-    this.app.use(express.json());
-    this.app.use(express.static("public"));
+    this.app1.use(cors());
+    this.app1.use(express.json());
+    this.app1.use(express.static("public"));
+    // this.app1.use(parseJson);
+
+    this.app2.use(cors());
+    this.app2.use(express.json());
+    this.app2.use(express.static("public"));
+    // this.app2.use(parseJson);
   }
 
   routes() {
-    this.app.use(this.productsPath, productsRouter)
+    // Asignar rutas específicas a cada aplicación
+    this.app1.use("/api/products", productRoutes);
+    this.app2.use("/api/carts", cartRoutes);
+    this.app2.use("/api/buy", buyRoutes);
   }
 
   listen() {
-    this.app.listen(this.port, () => {
-      console.log("Servidor corriendo en puerto", this.port);
-    })
+    this.app1.listen(this.port1, () => {
+      console.log("Servidor corriendo en puerto", this.port1);
+    });
+
+    this.app2.listen(this.port2, () => {
+      console.log("Servidor corriendo en puerto", this.port2);
+    });
   }
-
-
 }
 
 module.exports = Server;
