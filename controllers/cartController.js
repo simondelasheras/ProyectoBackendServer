@@ -1,3 +1,4 @@
+const { validationResult } = require('express-validator');
 const Cart = require("../models/cart");
 
 // Obtener el carrito
@@ -12,6 +13,11 @@ const cartGet = async (req, res) => {
 
 // Agregar un producto al carrito
 const cartPost = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const body = req.body;
     console.log("Cuerpo de la solicitud:", body); // Imprime el cuerpo de la solicitud en la consola del servidor
@@ -29,6 +35,11 @@ const cartPost = async (req, res) => {
 
 // Actualizar un producto en el carrito
 const cartPatch = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { _id } = req.params;
     const body = req.body;
@@ -47,6 +58,11 @@ const cartPatch = async (req, res) => {
 
 // Eliminar un producto del carrito
 const cartDelete = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { _id } = req.params;
     await Cart.findByIdAndDelete(_id);

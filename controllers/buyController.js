@@ -1,6 +1,8 @@
 // controllers/buyController.js
-const nodemailer = require('nodemailer');
 const { validationResult } = require('express-validator');
+const sgMail = require('@sendgrid/mail');
+
+sgMail.setApiKey('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');
 
 const handleGetRequest = (req, res) => {
   res.status(200).json({ message: 'GET request received on /api/buy' });
@@ -25,25 +27,16 @@ const processPurchase = async (req, res) => {
       return res.status(400).json({ error: 'Products array is required and must not be empty' });
     }
 
-    // Crear un transporte SMTP reutilizable usando nodemailer
-    const transporter = nodemailer.createTransport({
-      service: 'gmail',
-      auth: {
-        user: 'powersport.ok@gmail.com',
-        pass: 'jxmklacfqlqvwwws'
-      }
-    });
-
     // Configurar opciones del correo electrónico
-    const mailOptions = {
-      from: 'powersport.ok@gmail.com',
+    const msg = {
       to: email,
+      from: 'powersport.ok@gmail.com', // Usa una dirección verificada en SendGrid
       subject: 'Confirmación de compra - Power Sport',
       text: `¡Gracias por tu compra en nuestra tienda online Power Sport! Has comprado los siguientes productos: ${products.map(p => `${p.name} (x${p.inCart})`).join(', ')}. Te esperamos pronto.`
     };
 
     // Enviar el correo electrónico de confirmación
-    await transporter.sendMail(mailOptions);
+    await sgMail.send(msg);
 
     // Responder con un mensaje de éxito
     res.json({ message: 'Correo electrónico de confirmación enviado correctamente' });

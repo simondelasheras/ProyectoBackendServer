@@ -1,25 +1,38 @@
-
+// middlewares/parseJson.js
 const parseJson = (req, res, next) => {
-  try {
-    // Verifica que el tipo de contenido de la solicitud sea JSON
-    if (req.headers['content-type'] !== 'application/json') {
-      throw new Error('Tipo de contenido no es JSON');
-    }
+  console.log('parseJson middleware triggered for path:', req.path);
 
-    // Verifica que haya datos en el cuerpo de la solicitud
-    if (!req.body) {
-      throw new Error('Cuerpo de la solicitud vacío');
-    }
-
-    // Analiza el cuerpo JSON de la solicitud
-    req.parsedBody = JSON.parse(req.body);
-
-    // Pasa al siguiente middleware o ruta
-    next();
-  } catch (error) {
-    // Maneja los errores de análisis JSON
-    res.status(400).json({ error: error.message });
+  // Verificar si el método es POST, PATCH o PUT (excluye DELETE)
+  if (!['POST', 'PATCH', 'PUT'].includes(req.method)) {
+    return next();
   }
+
+  // Verificar si el Content-Type es application/json
+  if (req.headers['content-type'] !== 'application/json') {
+    console.log('Invalid content type');
+    return res.status(400).json({ error: 'Tipo de contenido no es JSON' });
+  }
+
+  let rawData = '';
+  req.on('data', chunk => {
+    rawData += chunk;
+  });
+
+  req.on('end', () => {
+    try {
+      req.body = JSON.parse(rawData);
+      console.log('Parsed body:', req.body); // Log para ver el cuerpo parseado
+      next();
+    } catch (error) {
+      console.log('JSON parsing error:', error.message);
+      res.status(400).json({ error: 'Error analizando JSON: ' + error.message });
+    }
+  });
 };
 
 module.exports = parseJson;
+
+
+
+
+
