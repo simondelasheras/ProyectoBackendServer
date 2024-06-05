@@ -1,3 +1,4 @@
+const { validationResult } = require('express-validator');
 const Product = require("../models/products");
 
 // Obtener todos los productos
@@ -13,6 +14,11 @@ const productsGet = async (req, res) => {
 
 // Crear un nuevo producto
 const productsPost = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const body = req.body;
     console.log("Cuerpo de la solicitud:", body); // Imprime el cuerpo de la solicitud en la consola del servidor
@@ -30,6 +36,11 @@ const productsPost = async (req, res) => {
 
 // Actualizar un producto existente
 const productsPatch = async (req, res) => {
+  const errors = validationResult(req);
+  if (!errors.isEmpty()) {
+    return res.status(400).json({ errors: errors.array() });
+  }
+
   try {
     const { _id } = req.params;
     const body = req.body;
@@ -51,4 +62,5 @@ module.exports = {
   productsPost,
   productsPatch,
 };
+
 

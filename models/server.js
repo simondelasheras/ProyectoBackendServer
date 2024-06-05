@@ -4,7 +4,7 @@ const { dbConnection } = require("../database/db.js");
 const productRoutes = require("../routes/productRoutes.js");
 const cartRoutes = require("../routes/cartRoutes.js");
 const buyRoutes = require("../routes/buyRoutes.js");
-const parseJson = require('../middlewares/parseJson');
+const parseJson = require('../middlewares/parseJson.js');
 
 class Server {
   constructor() {
@@ -31,36 +31,81 @@ class Server {
   }
 
   middlewares() {
-    this.app1.use(cors({
-      origin: 'http://localhost:3000', // Permitir solicitudes solo desde este origen (URL del frontend)
-      methods: ['GET', 'POST', 'PATCH', 'DELETE'], // Permitir estos métodos HTTP
-      allowedHeaders: ['Content-Type', 'Authorization'], // Permitir estos encabezados
-    }));
-    this.app1.use(express.json());
-    this.app1.use(express.static("public"));
-    // this.app1.use(parseJson);
+    console.log('Configuring middlewares...');
 
-    this.app2.use(cors({
-      origin: 'http://localhost:3000', // Permitir solicitudes solo desde este origen (URL del frontend)
-      methods: ['GET', 'POST', 'PATCH', 'DELETE'], // Permitir estos métodos HTTP
-      allowedHeaders: ['Content-Type', 'Authorization'], // Permitir estos encabezados
+    // Middleware para CORS
+    this.app1.use(cors({
+      origin: 'http://localhost:3000',
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
     }));
-    this.app2.use(express.json());
+    this.app1.use((req, res, next) => {
+      console.log('CORS middleware executed for app1');
+      next();
+    });
+
+    // Middleware para analizar solicitudes JSON
+    this.app1.use(parseJson); // Usar el middleware parseJson aquí
+    this.app1.use((req, res, next) => {
+      console.log('parseJson middleware executed for app1');
+      next();
+    });
+
+    // Middleware para servir archivos estáticos
+    this.app1.use(express.static("public"));
+    this.app1.use((req, res, next) => {
+      console.log('Static files middleware executed for app1');
+      next();
+    });
+
+    // Repite lo mismo para app2 y app3
+    this.app2.use(cors({
+      origin: 'http://localhost:3000',
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
+    }));
+    this.app2.use((req, res, next) => {
+      console.log('CORS middleware executed for app2');
+      next();
+    });
+
+    this.app2.use(parseJson); // Usar el middleware parseJson aquí
+    this.app2.use((req, res, next) => {
+      console.log('parseJson middleware executed for app2');
+      next();
+    });
+
     this.app2.use(express.static("public"));
-    // this.app2.use(parseJson);
+    this.app2.use((req, res, next) => {
+      console.log('Static files middleware executed for app2');
+      next();
+    });
 
     this.app3.use(cors({
-      origin: 'http://localhost:3000', // Permitir solicitudes solo desde este origen (URL del frontend)
-      methods: ['GET', 'POST', 'PATCH', 'DELETE'], // Permitir estos métodos HTTP
-      allowedHeaders: ['Content-Type', 'Authorization'], // Permitir estos encabezados
+      origin: 'http://localhost:3000',
+      methods: ['GET', 'POST', 'PATCH', 'DELETE'],
+      allowedHeaders: ['Content-Type', 'Authorization'],
     }));
-    this.app3.use(express.json());
+    this.app3.use((req, res, next) => {
+      console.log('CORS middleware executed for app3');
+      next();
+    });
+
+    this.app3.use(parseJson); // Usar el middleware parseJson aquí
+    this.app3.use((req, res, next) => {
+      console.log('parseJson middleware executed for app3');
+      next();
+    });
+
     this.app3.use(express.static("public"));
-    // this.app3.use(parseJson);
+    this.app3.use((req, res, next) => {
+      console.log('Static files middleware executed for app3');
+      next();
+    });
   }
 
   routes() {
-    // Asignar rutas específicas a cada aplicación
+    console.log('Configuring routes...');
     this.app1.use("/api/products", productRoutes);
     this.app2.use("/api/carts", cartRoutes);
     this.app3.use("/api/buy", buyRoutes);
