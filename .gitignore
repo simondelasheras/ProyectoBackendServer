@@ -1,2 +1,7 @@
 node_modules
 .env
+
+# Credenciales locales (también en subcarpetas)
+.env
+.env.*
+!.env.example
