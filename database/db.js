@@ -1,25 +1,14 @@
-
 const mongoose = require("mongoose");
 
-console.log('Cadena de conexión desde process.env:', process.env.CONNECTION_STRING);
-
-
 const dbConnection = async () => {
+  const connectionString = process.env.CONNECTION_STRING;
+  if (!connectionString) throw new Error("Falta configurar CONNECTION_STRING");
   try {
-    const connectionString = process.env.CONNECTION_STRING; 
-    console.log(connectionString);
-    if (!connectionString) {
-      throw new Error("La cadena de conexión está indefinida");
-    }
-
-    await mongoose.connect(process.env.CONNECTION_STRING);
+    await mongoose.connect(connectionString);
     console.log("Base de datos online");
   } catch (error) {
-    console.error(error);
-    throw new Error("Error a la hora de iniciar la base de datos");
+    throw new Error("No se pudo conectar a la base de datos");
   }
-}
-
-console.log(dbConnection.CONNECTION_STRING);
+};
 
 module.exports = { dbConnection };

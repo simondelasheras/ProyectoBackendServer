@@ -1,2 +1,7 @@
 node_modules
 .env
+
+# Configuración local: no subir credenciales
+.env
+.env.*
+!.env.example
