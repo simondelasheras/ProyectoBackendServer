@@ -20,7 +20,6 @@ const productsPost = async (req, res) => {
 
   try {
     const body = req.body;
-    console.log("Cuerpo de la solicitud:", body); // Imprime el cuerpo de la solicitud en la consola del servidor
     const newProduct = new Product(body);
     await newProduct.save();
     res.status(201).json({
@@ -28,7 +27,7 @@ const productsPost = async (req, res) => {
       newProduct
     });
   } catch (error) {
-    console.error("Error al agregar producto:", error);
+    console.error("Error al agregar producto.");
     res.status(400).json({ error: error.message });
   }
 };
@@ -51,7 +50,7 @@ const productsPatch = async (req, res) => {
 
     res.json(updatedProduct);
   } catch (error) {
-    console.error("Error al actualizar producto:", error);
+    console.error("Error al actualizar producto.");
     res.status(400).json({ error: "Error al actualizar producto", details: error.message });
   }
 };
