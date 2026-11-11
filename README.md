@@ -37,3 +37,11 @@ npm start
 Si faltan el usuario, la clave o el remitente, la compra responde `503` y no intenta enviar.
 
 `CONNECTION_STRING` es la URI de MongoDB.
+
+## Id de compra
+
+`purchaseId` es opcional en el JSON de `POST /api/buy`. Lo genera el cliente (un UUID sirve) antes del primer envío y lo guarda antes de llamar a la API. Tiene entre 8 y 80 caracteres: letras, números, guion o guion bajo.
+
+Con el mismo id, un reintento devuelve la misma respuesta y no reenvía el correo. Si el SMTP falló, ese id se puede volver a usar. Dos pedidos a la vez con el mismo id producen un solo envío. Sin el campo, cada POST envía un correo.
+
+El registro dura 24 horas. Un `409` significa que ese id todavía se está enviando: hay que reintentar el mismo valor, no crear otro.
