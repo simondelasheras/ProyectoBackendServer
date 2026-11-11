@@ -7,6 +7,16 @@ const buyRoutes = require("../routes/buyRoutes.js");
 const parseJson = require("../middlewares/parseJson.js");
 
 const DEFAULT_PORTS = [5050, 8080, 9090];
+const DEFAULT_CORS_ORIGIN = "http://localhost:3000";
+
+function readCorsOrigins() {
+  const raw = process.env.CORS_ORIGINS;
+  if (raw == null || String(raw).trim() === "") {
+    return [DEFAULT_CORS_ORIGIN];
+  }
+  const origins = String(raw).split(",").map((item) => item.trim()).filter(Boolean);
+  return origins.length > 0 ? origins : [DEFAULT_CORS_ORIGIN];
+}
 
 function readPorts() {
   const raw = process.env.PORT;
@@ -53,7 +63,7 @@ class Server {
 
   configureApp(app) {
     app.use(cors({
-      origin: "http://localhost:3000",
+      origin: readCorsOrigins(),
       methods: ["GET", "POST", "PATCH", "DELETE"],
       allowedHeaders: ["Content-Type", "Authorization"],
     }));

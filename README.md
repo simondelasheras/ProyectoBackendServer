@@ -39,6 +39,10 @@ Un solo proceso abre tres servidores porque el frontend llama a cada recurso por
 | ------------------- | --------------------------------------------------------------------------- |
 | `PORT`              | Puertos de productos, carritos y compra. Si se omite: `5050,8080,9090`.    |
 | `CONNECTION_STRING` | URI de MongoDB.                                                          |
+| `CORS_ORIGINS`      | Orígenes permitidos, separados por coma. Si se omite: `http://localhost:3000`. |
+| `JSON_BODY_LIMIT_BYTES` | Tamaño máximo del JSON. Si se omite: 65536.                          |
+| `BUY_RATE_LIMIT`    | Compras por IP en la ventana. Si se omite: 10. `0` desactiva el límite. |
+| `BUY_RATE_WINDOW_MS` | Ventana del límite, en milisegundos. Si se omite: 60000.               |
 | `BREVO_SMTP_HOST`   | Servidor SMTP. Si se omite: `smtp-relay.brevo.com`.                         |
 | `BREVO_SMTP_PORT`   | Puerto. Si se omite: `587` (STARTTLS). `2525` también negocia STARTTLS. `465` usa TLS implícito. |
 | `BREVO_SMTP_LOGIN`  | Usuario SMTP de Brevo. No es el remitente.                                  |
@@ -53,9 +57,12 @@ Si faltan el usuario, la clave o el remitente, la compra responde `503` y no int
 
 `purchaseId` es opcional. Lo genera el cliente antes del primer envío y lo reutiliza en los reintentos de ese intento. Con el mismo id no se reenvía el correo. Si el SMTP falló, ese id se puede volver a usar. Sin el campo, cada POST envía un correo. El registro dura 24 horas. Un `409` significa que ese id todavía se está enviando.
 
+`POST /api/buy` acepta como máximo `BUY_RATE_LIMIT` solicitudes por IP en cada ventana. El límite mira la IP de la conexión, no una cabecera reenviada. Un cuerpo JSON mayor al tope responde `413`.
+
 ## Pendiente para publicar
 
-- Actualizar dependencias con avisos de `npm audit`. Este cambio no sube versiones.
-- Elegir hosting y puertos públicos. El frontend de la simulación espera 5050, 8080 y 9090 en localhost.
-- Ampliar CORS más allá de `http://localhost:3000` cuando exista un dominio.
-- Autenticar y limitar la escritura de productos y carritos, y el envío de correos, antes de exponer la API.
+- `nodemailer` sigue en la versión 6. El arreglo publicado pide la versión 10, un salto mayor, y no se aplicó.
+- El hosting tiene que publicar tres puertos, o decidir un solo proceso con las rutas juntas. Muchos proveedores inyectan un solo `PORT`: hoy eso mueve solo productos y deja carritos y compra en 8080 y 9090.
+- Poner en `CORS_ORIGINS` el origen público cuando exista. El ejemplo no trae un dominio de producción.
+- Autenticar quién puede crear o editar productos y carritos, y quién puede disparar correos. El límite por IP no reemplaza eso. Un captcha sería otra decisión de producto.
+- Si la API queda detrás de un proxy, hay que decidir si la IP del límite es la del proxy o la del cliente. Hoy no se confía en `X-Forwarded-For`.
