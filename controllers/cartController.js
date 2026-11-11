@@ -20,7 +20,6 @@ const cartPost = async (req, res) => {
 
   try {
     const body = req.body;
-    console.log("Cuerpo de la solicitud:", body); // Imprime el cuerpo de la solicitud en la consola del servidor
     const newCartItem = new Cart(body);
     await newCartItem.save();
     res.status(201).json({
@@ -28,7 +27,7 @@ const cartPost = async (req, res) => {
       newCartItem
     });
   } catch (error) {
-    console.error("Error al agregar producto al carrito:", error);
+    console.error("Error al agregar producto al carrito.");
     res.status(400).json({ error: error.message });
   }
 };
@@ -51,7 +50,7 @@ const cartPatch = async (req, res) => {
 
     res.json(updatedCartItem);
   } catch (error) {
-    console.error("Error al actualizar producto en el carrito:", error);
+    console.error("Error al actualizar producto en el carrito.");
     res.status(400).json({ error: "Error al actualizar producto en el carrito", details: error.message });
   }
 };
@@ -68,7 +67,7 @@ const cartDelete = async (req, res) => {
     await Cart.findByIdAndDelete(_id);
     res.json({ message: 'Producto eliminado correctamente del carrito' });
   } catch (error) {
-    console.error("Error al eliminar producto del carrito:", error);
+    console.error("Error al eliminar producto del carrito.");
     res.status(400).json({ error: "Error al eliminar producto del carrito", details: error.message });
   }
 };

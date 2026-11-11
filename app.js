@@ -2,10 +2,15 @@ require("dotenv").config();
 
 const Server = require("./models/server.js");
 
-const server = new Server();
+async function main() {
+  try {
+    const server = new Server();
+    await server.conectarDB();
+    await server.listen();
+  } catch (error) {
+    console.error(error.message || "No se pudo iniciar el servidor.");
+    process.exit(1);
+  }
+}
 
-const port = process.env.PORT;
-
-server.listen(port, () => {
-  console.log(`Servidor corriendo en puerto ${port}`);
-});
+main();

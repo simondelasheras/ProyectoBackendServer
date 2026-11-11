@@ -1,5 +1,4 @@
 // routes/buyRoutes.js
-const express = require('express');
 const { Router } = require("express");
 const { body } = require('express-validator');
 const { processPurchase, handleGetRequest } = require('../controllers/buyController');

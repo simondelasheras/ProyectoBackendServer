@@ -1,4 +1,3 @@
-const express = require('express');
 const { Router } = require("express");
 const { productsGet, productsPost, productsPatch } = require('../controllers/productController');
 const { body, param } = require('express-validator');
