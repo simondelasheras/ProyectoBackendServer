@@ -28,7 +28,7 @@ cp .env.example .env
 
 `.env` no se versiona. El resto de variables puede quedar vacío y usa el valor de la tabla.
 
-`CONNECTION_STRING` tiene que estar escrita en `.env` antes de `npm start`. Sin ese archivo, o con la variable vacía, el proceso no abre los puertos: sale con código 1 y el mensaje `Falta configurar CONNECTION_STRING.` Si la URI está puesta pero MongoDB no responde, también sale con código 1, a los pocos segundos, con `No se pudo conectar a la base de datos. Revisá que MongoDB esté en marcha y que CONNECTION_STRING sea válida.`
+Antes de `npm start`, en ese `.env` tiene que estar `CONNECTION_STRING` con la URI de MongoDB. Si queda vacía, o si no hay `.env`, el proceso termina con `Falta configurar CONNECTION_STRING.` y no abre los puertos. Si la URI está puesta pero MongoDB no responde, también termina, a los pocos segundos, con `No se pudo conectar a la base de datos. Revisá que MongoDB esté en marcha y que CONNECTION_STRING sea válida.` En los dos casos el código de salida es 1.
 
 | Variable | Obligatoria | Si se deja vacía |
 | --- | --- | --- |
@@ -64,78 +64,51 @@ El frontend solo muestra `gender` `Men` o `Women` y `category` `Top`, `Bottom` o
 
 No hay índice único en `name` ni en `slug`. Solo existe el índice de `_id`. Un segundo `POST` con los mismos datos responde 201 y crea otro documento. No hay `DELETE /api/products`.
 
-Antes de cargar, mirá el listado. Si no es `[]`, no vuelvas a hacer el `POST`.
+Un producto de ejemplo, desde cualquier carpeta, con el backend ya escuchando. Los dos bloques hacen `GET /api/products` antes. Si la respuesta no es `[]`, no envían el `POST` y no borran lo que ya está. La primera vez crea el producto. La segunda avisa y no agrega otro.
+
+En bash, `curl` es el programa curl. En Windows PowerShell 5.1, y en PowerShell 7 para Windows, `curl` es un alias de `Invoke-WebRequest`: no pegues este bloque ahí. Usá `curl.exe` o el bloque de PowerShell.
 
 ```bash
-curl -s http://localhost:5050/api/products
+actual=$(curl -s http://localhost:5050/api/products)
+if [ "$actual" != "[]" ]; then
+  echo "Ya hay productos. No se carga el ejemplo."
+else
+  curl -s -X POST http://localhost:5050/api/products \
+    -H 'Content-Type: application/json' \
+    -d '{"name":"Jersey Boca Jrs","type":"Camiseta","price":"1500","category":"Top","gender":"Men","slug":"jersey-boca","countInStock":20,"inCart":0,"description":"Camiseta básica"}'
+fi
 ```
 
-Un producto, desde cualquier carpeta, con el backend ya escuchando. En bash, `curl` es el programa curl:
-
-```bash
-curl -s -X POST http://localhost:5050/api/products \
-  -H 'Content-Type: application/json' \
-  -d '{"name":"Jersey Boca Jrs","type":"Camiseta","price":"1500","category":"Top","gender":"Men","slug":"jersey-boca","countInStock":20,"inCart":0,"description":"Camiseta básica"}'
-```
-
-La respuesta 201 trae `newProduct._id`.
-
-En Windows PowerShell 5.1, `curl` no es ese programa: es un alias de `Invoke-WebRequest`. No pegues ahí los comandos de bash. PowerShell 7 en Windows tampoco: usá `curl.exe` si querés el comando de bash, o el bloque de abajo. Este bloque sirve en 5.1 y en PowerShell 7. El cuerpo va en bytes UTF-8, porque si no los acentos se pueden deformar. No agregues `charset` al `Content-Type`.
-
-Desde cualquier carpeta:
+El bloque de PowerShell sirve en Windows PowerShell 5.1 y en PowerShell 7. No cambia preferencias de la sesión. El cuerpo va en bytes UTF-8 y el `Content-Type` queda exactamente `application/json`. `-Depth 4` alcanza porque el producto no tiene objetos anidados. En 5.1 el valor por defecto de `-Depth` es 2.
 
 ```powershell
-$producto = @{
-  name = "Jersey Boca Jrs"
-  type = "Camiseta"
-  price = "1500"
-  category = "Top"
-  gender = "Men"
-  slug = "jersey-boca"
-  countInStock = 20
-  inCart = 0
-  description = "Camiseta básica"
-}
-$json = $producto | ConvertTo-Json -Depth 4 -Compress
-$bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
-Invoke-RestMethod -Uri http://localhost:5050/api/products -Method Post -ContentType "application/json" -Body $bytes
-```
-
-`-Depth 4` alcanza: el producto no tiene objetos anidados. En 5.1 el valor por defecto de `-Depth` es 2.
-
-Los 24 productos se cargan desde la raíz de `NuevoProyectoReact`, que es donde está `utils/db.json`. Es el mismo `POST` que el script de Node del README de ese repo. Si el listado no está vacío, no se vuelve a cargar.
-
-```powershell
-$raw = (Invoke-WebRequest -Uri http://localhost:5050/api/products -UseBasicParsing).Content
-if ($raw.Trim() -ne "[]") {
-  $existing = @(ConvertFrom-Json -InputObject $raw)
-  Write-Output ("Ya hay {0} productos. No se vuelve a cargar." -f $existing.Count)
-  exit 0
-}
-$catalog = Get-Content -Raw -Encoding utf8 (Join-Path (Get-Location) "utils/db.json") | ConvertFrom-Json
-foreach ($item in $catalog.products) {
-  $copy = [ordered]@{}
-  foreach ($prop in $item.PSObject.Properties) {
-    if ($prop.Name -ne "id") { $copy[$prop.Name] = $prop.Value }
+& {
+  $raw = (Invoke-WebRequest -Uri http://localhost:5050/api/products -UseBasicParsing).Content
+  if ($raw.Trim() -ne "[]") {
+    $existing = @(ConvertFrom-Json -InputObject $raw)
+    Write-Output ("Ya hay {0} productos. No se carga el ejemplo." -f $existing.Count)
+  } else {
+    $producto = @{
+      name = "Jersey Boca Jrs"
+      type = "Camiseta"
+      price = "1500"
+      category = "Top"
+      gender = "Men"
+      slug = "jersey-boca"
+      countInStock = 20
+      inCart = 0
+      description = "Camiseta básica"
+    }
+    $json = $producto | ConvertTo-Json -Depth 4 -Compress
+    $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+    Invoke-RestMethod -Uri http://localhost:5050/api/products -Method Post -ContentType "application/json" -Body $bytes
   }
-  $json = $copy | ConvertTo-Json -Depth 4 -Compress
-  $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
-  Invoke-RestMethod -Uri http://localhost:5050/api/products -Method Post -ContentType "application/json" -Body $bytes | Out-Null
 }
-Write-Output ("Cargados {0} productos" -f @($catalog.products).Count)
 ```
 
-Tiene que imprimir `Cargados 24 productos` la primera vez. La segunda, `Ya hay 24 productos. No se vuelve a cargar.`
+Los 24 productos de `utils/db.json` se cargan desde la raíz de NuevoProyectoReact, que es donde está el archivo. El script está en la sección [2. Productos](https://github.com/simondelasheras/NuevoProyectoReact/blob/cursor/docs-instalacion-2a8c/README.md#2-productos) de ese README. Este repo no lo duplica.
 
-Ese `if` compara el texto de la respuesta. En PowerShell 5.1, envolver `$null` con `@()` cuenta 1, así que no uses `@((Invoke-RestMethod ...))` para saber si el listado está vacío.
-
-Solo en una base local de pruebas, y sabiendo que borra todos los productos de esa base (no solo los de ejemplo), se puede vaciar la colección con el shell de MongoDB:
-
-```bash
-mongosh "mongodb://127.0.0.1:27017/powersport_local" --eval 'db.products.deleteMany({})'
-```
-
-No hay un endpoint para hacer eso. `DELETE /api/carts/:id` borra un ítem del carrito, no un producto.
+No hay `DELETE /api/products`. `DELETE /api/carts/:id` borra un ítem del carrito, no un producto. En una base local de prueba, y sabiendo que se pierde el catálogo, ese mismo README muestra cómo vaciar la colección `products` con mongosh. No uses eso contra una base que quieras conservar.
 
 ## Arranque
 
@@ -211,7 +184,7 @@ curl -s -X PATCH http://localhost:5050/api/products/ID \
 
 1. MongoDB en marcha y `CONNECTION_STRING` en este repo.
 2. `npm install` y `npm start` en esta carpeta. Los tres curl de arriba tienen que responder.
-3. Cargar al menos un producto con el `POST` de arriba. Sin eso, el shop queda vacío.
+3. Cargar al menos un producto con el ejemplo de arriba, o los 24 con la sección 2. Productos del README del frontend. Sin eso, el shop queda vacío.
 4. En el otro repo, desde su raíz: `npm ci` y `npm run dev`. Abrí http://localhost:3000. El origen por defecto del CORS es ese.
 
 Los detalles del sitio están en su README.
