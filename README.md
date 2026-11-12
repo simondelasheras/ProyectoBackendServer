@@ -56,17 +56,84 @@ Mongoose crea las colecciones al guardar:
 | `Cart` | `carts` |
 | `PurchaseAttempt` | `purchaseattempts` |
 
-El catálogo de ejemplo del frontend (`utils/db.json`) no lo lee este servidor. Un producto se crea con `POST /api/products`. La ruta exige `name` y `type`, como texto no vacío. El resto de campos del modelo son opcionales. `Content-Type` tiene que ser exactamente `application/json`.
+El catálogo de ejemplo del frontend (`utils/db.json`, 24 productos) no lo lee este servidor. Un producto se crea con `POST /api/products`. La ruta exige `name` y `type`, como texto no vacío. El resto de campos del modelo son opcionales. `Content-Type` tiene que ser exactamente `application/json`, sin `; charset=...`: si no, la respuesta es 400 `Tipo de contenido no es JSON`.
 
-El frontend solo muestra `gender` `Men` o `Women` y `category` `Top`, `Bottom` o `Shoes`.
+El frontend solo muestra `gender` `Men` o `Women` y `category` `Top`, `Bottom` o `Shoes`. El `id` numérico de `db.json` no se envía: no está en el modelo.
+
+No hay índice único en `name` ni en `slug`. Solo existe el índice de `_id`. Un segundo `POST` con los mismos datos responde 201 y crea otro documento. No hay `DELETE /api/products`.
+
+Antes de cargar, mirá el listado. Si no es `[]`, no vuelvas a hacer el `POST`.
+
+```bash
+curl -s http://localhost:5050/api/products
+```
+
+Un producto, desde cualquier carpeta, con el backend ya escuchando. En bash, `curl` es el programa curl:
 
 ```bash
 curl -s -X POST http://localhost:5050/api/products \
   -H 'Content-Type: application/json' \
-  -d '{"name":"Jersey Boca Jrs","type":"Camiseta","price":"1500","category":"Top","gender":"Men","slug":"jersey-boca","countInStock":20,"inCart":0}'
+  -d '{"name":"Jersey Boca Jrs","type":"Camiseta","price":"1500","category":"Top","gender":"Men","slug":"jersey-boca","countInStock":20,"inCart":0,"description":"Camiseta básica"}'
 ```
 
 La respuesta 201 trae `newProduct._id`.
+
+En Windows PowerShell 5.1, `curl` no es ese programa: es un alias de `Invoke-WebRequest`. No pegues ahí los comandos de bash. PowerShell 7 en Windows tampoco: usá `curl.exe` si querés el comando de bash, o el bloque de abajo. Este bloque sirve en 5.1 y en PowerShell 7. El cuerpo va en bytes UTF-8, porque si no los acentos se pueden deformar. No agregues `charset` al `Content-Type`.
+
+Desde cualquier carpeta:
+
+```powershell
+$producto = @{
+  name = "Jersey Boca Jrs"
+  type = "Camiseta"
+  price = "1500"
+  category = "Top"
+  gender = "Men"
+  slug = "jersey-boca"
+  countInStock = 20
+  inCart = 0
+  description = "Camiseta básica"
+}
+$json = $producto | ConvertTo-Json -Depth 4 -Compress
+$bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+Invoke-RestMethod -Uri http://localhost:5050/api/products -Method Post -ContentType "application/json" -Body $bytes
+```
+
+`-Depth 4` alcanza: el producto no tiene objetos anidados. En 5.1 el valor por defecto de `-Depth` es 2.
+
+Los 24 productos se cargan desde la raíz de `NuevoProyectoReact`, que es donde está `utils/db.json`. Es el mismo `POST` que el script de Node del README de ese repo. Si el listado no está vacío, no se vuelve a cargar.
+
+```powershell
+$raw = (Invoke-WebRequest -Uri http://localhost:5050/api/products -UseBasicParsing).Content
+if ($raw.Trim() -ne "[]") {
+  $existing = @(ConvertFrom-Json -InputObject $raw)
+  Write-Output ("Ya hay {0} productos. No se vuelve a cargar." -f $existing.Count)
+  exit 0
+}
+$catalog = Get-Content -Raw -Encoding utf8 (Join-Path (Get-Location) "utils/db.json") | ConvertFrom-Json
+foreach ($item in $catalog.products) {
+  $copy = [ordered]@{}
+  foreach ($prop in $item.PSObject.Properties) {
+    if ($prop.Name -ne "id") { $copy[$prop.Name] = $prop.Value }
+  }
+  $json = $copy | ConvertTo-Json -Depth 4 -Compress
+  $bytes = [System.Text.Encoding]::UTF8.GetBytes($json)
+  Invoke-RestMethod -Uri http://localhost:5050/api/products -Method Post -ContentType "application/json" -Body $bytes | Out-Null
+}
+Write-Output ("Cargados {0} productos" -f @($catalog.products).Count)
+```
+
+Tiene que imprimir `Cargados 24 productos` la primera vez. La segunda, `Ya hay 24 productos. No se vuelve a cargar.`
+
+Ese `if` compara el texto de la respuesta. En PowerShell 5.1, envolver `$null` con `@()` cuenta 1, así que no uses `@((Invoke-RestMethod ...))` para saber si el listado está vacío.
+
+Solo en una base local de pruebas, y sabiendo que borra todos los productos de esa base (no solo los de ejemplo), se puede vaciar la colección con el shell de MongoDB:
+
+```bash
+mongosh "mongodb://127.0.0.1:27017/powersport_local" --eval 'db.products.deleteMany({})'
+```
+
+No hay un endpoint para hacer eso. `DELETE /api/carts/:id` borra un ítem del carrito, no un producto.
 
 ## Arranque
 
