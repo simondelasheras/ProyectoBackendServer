@@ -26,7 +26,9 @@ cd ProyectoBackendServer
 cp .env.example .env
 ```
 
-`.env` no se versiona. Completá al menos `CONNECTION_STRING`. El resto puede quedar vacío y usa el valor de la tabla.
+`.env` no se versiona. El resto de variables puede quedar vacío y usa el valor de la tabla.
+
+`CONNECTION_STRING` tiene que estar escrita en `.env` antes de `npm start`. Sin ese archivo, o con la variable vacía, el proceso no abre los puertos: sale con código 1 y el mensaje `Falta configurar CONNECTION_STRING.` Si la URI está puesta pero MongoDB no responde, también sale con código 1, a los pocos segundos, con `No se pudo conectar a la base de datos. Revisá que MongoDB esté en marcha y que CONNECTION_STRING sea válida.`
 
 | Variable | Obligatoria | Si se deja vacía |
 | --- | --- | --- |
@@ -137,7 +139,7 @@ No hay un endpoint para hacer eso. `DELETE /api/carts/:id` borra un ítem del ca
 
 ## Arranque
 
-Con MongoDB accesible en `CONNECTION_STRING`:
+En la raíz del repo, y solo después de guardar `CONNECTION_STRING` en `.env`:
 
 ```bash
 npm install
