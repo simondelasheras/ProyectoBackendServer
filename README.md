@@ -106,7 +106,7 @@ El bloque de PowerShell sirve en Windows PowerShell 5.1 y en PowerShell 7. No ca
 }
 ```
 
-Los 24 productos de `utils/db.json` se cargan desde la raíz de NuevoProyectoReact, que es donde está el archivo. El script está en la sección [2. Productos](https://github.com/simondelasheras/NuevoProyectoReact/blob/cursor/docs-instalacion-2a8c/README.md#2-productos) de ese README. Este repo no lo duplica.
+Los 24 productos de `utils/db.json` se cargan desde la raíz de NuevoProyectoReact, que es donde está el archivo. El script está en [Cargar los 24 productos](https://github.com/simondelasheras/NuevoProyectoReact/blob/dev/README.md#cargar-los-24-productos). Esa sección queda en `dev` cuando se fusione el PR #12 del frontend. Este repo no lo duplica.
 
 No hay `DELETE /api/products`. `DELETE /api/carts/:id` borra un ítem del carrito, no un producto. En una base local de prueba, y sabiendo que se pierde el catálogo, ese mismo README muestra cómo vaciar la colección `products` con mongosh. No uses eso contra una base que quieras conservar.
 
