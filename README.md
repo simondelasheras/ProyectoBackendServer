@@ -85,8 +85,8 @@ El bloque de PowerShell sirve en Windows PowerShell 5.1 y en PowerShell 7. No ca
 & {
   $raw = (Invoke-WebRequest -Uri http://localhost:5050/api/products -UseBasicParsing).Content
   if ($raw.Trim() -ne "[]") {
-    $existing = @(ConvertFrom-Json -InputObject $raw)
-    Write-Output ("Ya hay {0} productos. No se carga el ejemplo." -f $existing.Count)
+    $existing = ConvertFrom-Json -InputObject $raw
+    Write-Output ("Ya hay {0} productos. No se carga el ejemplo." -f @($existing).Count)
   } else {
     $producto = @{
       name = "Jersey Boca Jrs"
